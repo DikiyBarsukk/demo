@@ -31,7 +31,7 @@ public class JwtTokenProvider {
 
     public String createToken(String username, Set<GrantedAuthority> authorities) {
         return Jwts.builder()
-                .setSubject(username)
+                .subject(username)
                 .claim("auth", authorities.stream()
                         .map(GrantedAuthority::getAuthority)
                         .collect(Collectors.toList()))
@@ -41,8 +41,8 @@ public class JwtTokenProvider {
     }
     public boolean validateToken(String token) {
         try {
-            Jwts.parserBuilder()
-                    .setSigningKey(getSigningKey())
+            Jwts.parser()
+                    .verifyWith(getSigningKey())
                     .build()
                     .parseClaimsJws(token);
             return true;
@@ -52,24 +52,21 @@ public class JwtTokenProvider {
     }
 
     public String getUsername(String token) {
-        System.out.println(getAuthorities(token));
-        return Jwts.parserBuilder()
-                .setSigningKey(getSigningKey())
+        return Jwts.parser()
+                .verifyWith(getSigningKey())
                 .build()
-                .parseClaimsJws(token)
-                .getBody()
-                .getSubject();
-
+                .parseSignedClaims(token)
+                .getPayload().getSubject();
     }
 
     public Set<GrantedAuthority> getAuthorities(String token) {
-        return ((Collection<?>) Jwts.parserBuilder()
-                .setSigningKey(getSigningKey())
+        return ((Collection<?>) Jwts.parser()
+                .verifyWith(getSigningKey())
                 .build()
-                .parseClaimsJws(token)
+                .parseSignedClaims(token)
                 .getBody()
-                .get("auth", Collection.class)).stream()
-                .map(authority -> new SimpleGrantedAuthority((String) authority))
+                .getPayload().get("auth", Collection.class)).stream()
+                .map(role -> new SimpleGrantedAuthority((String) role))
                 .collect(Collectors.toSet());
     }
 }
