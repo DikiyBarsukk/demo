@@ -64,7 +64,6 @@ public class JwtTokenProvider {
                 .verifyWith(getSigningKey())
                 .build()
                 .parseSignedClaims(token)
-                .getBody()
                 .getPayload().get("auth", Collection.class)).stream()
                 .map(role -> new SimpleGrantedAuthority((String) role))
                 .collect(Collectors.toSet());

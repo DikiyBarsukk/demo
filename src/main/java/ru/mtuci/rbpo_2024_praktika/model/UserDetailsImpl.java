@@ -1,18 +1,21 @@
 package ru.mtuci.rbpo_2024_praktika.model;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Set;
 
-@Data
+@RequiredArgsConstructor
 public class UserDetailsImpl implements UserDetails {
-    private String username;
-    private String password;
-    private Set<GrantedAuthority> authorities;
-    private boolean isActive;
+    @Getter
+    private final String username;
+    @Getter
+    private final String password;
+    @Getter
+    private final Set<GrantedAuthority> authorities;
+    private final boolean isActive;
 
     @Override
     public boolean isAccountNonExpired() {
@@ -34,11 +37,11 @@ public class UserDetailsImpl implements UserDetails {
         return isActive;
     }
 
-    public static UserDetails fromApplicationUser(ApplicationUser user) {
-        return new User(
+    public static UserDetails fromUser(User user) {
+        return new UserDetailsImpl(
                 user.getEmail(),
                 user.getPassword(),
-                user.getRole().getGrantedAuthorities()
-        );
+                user.getRole().getGrantedAuthorities(),
+                true);
     }
 }
