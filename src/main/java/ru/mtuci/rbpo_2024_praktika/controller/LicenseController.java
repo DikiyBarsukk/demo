@@ -27,11 +27,10 @@ public class LicenseController {
 
     @PostMapping("/activate")
     public ResponseEntity<?> activateLicense(
-            @RequestParam String mac,
-            @RequestParam String key) {
+            @RequestBody ActivationDTO activationDTO) {
         try {
             User currentUser = getAuthenticatedUser();
-            Ticket ticket = licenseService.processActivation(mac, key, currentUser);
+            Ticket ticket = licenseService.processActivation(activationDTO.getMac(), activationDTO.getKey(), currentUser);
             return ResponseEntity.ok(ticket);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
@@ -44,16 +43,11 @@ public class LicenseController {
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/add")
     public ResponseEntity<String> add(
-            @RequestParam Long productId,
-            @RequestParam Long ownerId,
-            @RequestParam Long licenseTypeId,
-            @RequestParam Integer deviceCount) {
+            @RequestBody AddLicenseDTO addLicenseDTO) {
         try {
-            License createdLicense = licenseService.createLicense(productId, ownerId, licenseTypeId, deviceCount);
+            License createdLicense = licenseService.createLicense(addLicenseDTO.getProductId(), addLicenseDTO.getOwnerId(), addLicenseDTO.getLicenseTypeId(), addLicenseDTO.getDeviceCount());
             return ResponseEntity.ok("Лицензия создана с ID: " + createdLicense.getId());
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body("Ошибка: " + e.getMessage());
-        } catch (NoSuchElementException e) {
+        } catch (IllegalArgumentException | NoSuchElementException e) {
             return ResponseEntity.badRequest().body("Ошибка: " + e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -64,11 +58,10 @@ public class LicenseController {
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/renew")
     public ResponseEntity<?> renewLicense(
-            @RequestParam String licenseKey,
-            @RequestParam String macAddress) {
+            @RequestBody RenewDTO renewDTO) {
         try {
             User authenticatedUser = getAuthenticatedUser();
-            Ticket ticket = licenseService.renewLicense(licenseKey, macAddress, authenticatedUser);
+            Ticket ticket = licenseService.renewLicense(renewDTO.getLicenseKey(), renewDTO.getMacAddress(), authenticatedUser);
             return ResponseEntity.ok(ticket);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());

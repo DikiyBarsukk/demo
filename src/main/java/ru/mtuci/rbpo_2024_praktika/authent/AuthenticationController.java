@@ -24,20 +24,18 @@ public class AuthenticationController {
     private final UserService userService;
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(
-            @RequestParam String email,
-            @RequestParam String password) {
+    public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
         try {
             var authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(email, password)
+                    new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword())
             );
 
             String token = jwtProvider.createToken(
-                    email,
+                    loginRequest.getEmail(),
                     authentication.getAuthorities().stream().collect(Collectors.toSet())
             );
 
-            return ResponseEntity.ok(new LoginResponse(email, token));
+            return ResponseEntity.ok(new LoginResponse(loginRequest.getEmail(), token));
         } catch (AuthenticationException ex) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body("Неверный пароль");
@@ -46,11 +44,9 @@ public class AuthenticationController {
 
     @PostMapping("/registration")
     public ResponseEntity<?> register(
-            @RequestParam String email,
-            @RequestParam String name,
-            @RequestParam String password) {
+            @RequestBody RegisterRequest registerRequest) {
         try {
-            userService.create(email, name, password);
+            userService.create(registerRequest.getEmail(), registerRequest.getName(), registerRequest.getPassword());
             return ResponseEntity.ok("Регистрация выполнена!");
         } catch (IllegalStateException ex) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
