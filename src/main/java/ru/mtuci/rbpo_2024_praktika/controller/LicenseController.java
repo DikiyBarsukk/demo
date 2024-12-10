@@ -8,11 +8,11 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
-import ru.mtuci.projectRBPO.model.License;
-import ru.mtuci.projectRBPO.model.User;
-import ru.mtuci.projectRBPO.services.LicenseService;
-import ru.mtuci.projectRBPO.services.UserService;
-import ru.mtuci.projectRBPO.ticket.Ticket;
+import ru.mtuci.rbpo_2024_praktika.model.License;
+import ru.mtuci.rbpo_2024_praktika.model.User;
+import ru.mtuci.rbpo_2024_praktika.service.LicenseService;
+import ru.mtuci.rbpo_2024_praktika.service.UserService;
+import ru.mtuci.rbpo_2024_praktika.ticket.Ticket;
 
 import java.util.NoSuchElementException;
 

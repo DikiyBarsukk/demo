@@ -1,7 +1,7 @@
 package ru.mtuci.rbpo_2024_praktika.authent;
 
 import ru.mtuci.rbpo_2024_praktika.configuration.JwtTokenProvider;
-import ru.mtuci.rbpo_2024_praktika.services.UserService;
+import ru.mtuci.rbpo_2024_praktika.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

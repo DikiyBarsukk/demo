@@ -4,12 +4,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import ru.mtuci.projectRBPO.model.LicenseType;
-import ru.mtuci.projectRBPO.model.Product;
-import ru.mtuci.projectRBPO.repo.ProductRepository;
-import ru.mtuci.projectRBPO.services.LicenseService;
-import ru.mtuci.projectRBPO.services.LicenseTypeService;
-import ru.mtuci.projectRBPO.services.ProductService;
+import ru.mtuci.rbpo_2024_praktika.model.LicenseType;
+import ru.mtuci.rbpo_2024_praktika.model.Product;
+import ru.mtuci.rbpo_2024_praktika.repository.ProductRepository;
+import ru.mtuci.rbpo_2024_praktika.service.LicenseService;
+import ru.mtuci.rbpo_2024_praktika.service.LicenseTypeService;
+import ru.mtuci.rbpo_2024_praktika.service.ProductService;
 
 import java.util.List;
 import java.util.Optional;

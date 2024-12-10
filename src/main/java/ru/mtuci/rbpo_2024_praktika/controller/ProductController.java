@@ -5,9 +5,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import ru.mtuci.projectRBPO.model.Product;
-import ru.mtuci.projectRBPO.services.LicenseService;
-import ru.mtuci.projectRBPO.services.ProductService;
+import ru.mtuci.rbpo_2024_praktika.model.Product;
+import ru.mtuci.rbpo_2024_praktika.service.LicenseService;
+import ru.mtuci.rbpo_2024_praktika.service.ProductService;
 
 
 @RequiredArgsConstructor

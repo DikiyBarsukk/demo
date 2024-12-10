@@ -31,7 +31,7 @@ public class JwtTokenProvider {
 
     public String createToken(String username, Set<GrantedAuthority> authorities) {
         return Jwts.builder()
-                .subject(username)
+                .setSubject(username)
                 .claim("auth", authorities.stream()
                         .map(GrantedAuthority::getAuthority)
                         .collect(Collectors.toList()))
@@ -41,8 +41,8 @@ public class JwtTokenProvider {
     }
     public boolean validateToken(String token) {
         try {
-            Jwts.parser()
-                    .verifyWith(getSigningKey())
+            Jwts.parserBuilder()
+                    .setSigningKey(getSigningKey())
                     .build()
                     .parseClaimsJws(token);
             return true;
@@ -52,19 +52,19 @@ public class JwtTokenProvider {
     }
 
     public String getUsername(String token) {
-        return Jwts.parser()
-                .verifyWith(getSigningKey())
+        return Jwts.parserBuilder()
+                .setSigningKey(getSigningKey())
                 .build()
-                .parseSignedClaims(token)
-                .getPayload().getSubject();
+                .parseClaimsJws(token)
+                .getBody().getSubject();
     }
 
     public Set<GrantedAuthority> getAuthorities(String token) {
-        return ((Collection<?>) Jwts.parser()
-                .verifyWith(getSigningKey())
+        return ((Collection<?>) Jwts.parserBuilder()
+                .setSigningKey(getSigningKey())
                 .build()
-                .parseSignedClaims(token)
-                .getPayload().get("auth", Collection.class)).stream()
+                .parseClaimsJws(token)
+                .getBody().get("auth", Collection.class)).stream()
                 .map(role -> new SimpleGrantedAuthority((String) role))
                 .collect(Collectors.toSet());
     }
