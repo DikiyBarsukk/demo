@@ -24,10 +24,9 @@ public class InfoController {
     private final ProductRepository productRepository;
 
     @GetMapping("/license")
-    public ResponseEntity<?> getLicenseInfo(@RequestParam String mac) {
-        return licenseService.getLicenseInfo(mac);
+    public ResponseEntity<?> getLicenseInfo(@RequestParam String mac, @RequestParam String key) {
+        return licenseService.getLicenseInfo(mac,key);
     }
-
     @GetMapping("/license-type/all")
     public ResponseEntity<List<LicenseType>> getAllLicenseTypes() {
         try {

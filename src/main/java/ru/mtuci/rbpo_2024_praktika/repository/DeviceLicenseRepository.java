@@ -10,5 +10,7 @@ public interface DeviceLicenseRepository extends JpaRepository<DeviceLicense, Lo
     List<DeviceLicense> findByDeviceId(Long deviceId);
     long countByLicenseAndActivationDateIsNotNull(License license);
     boolean existsByLicenseIdAndDeviceId(Long licenseId, Long deviceId);
+    DeviceLicense findByDeviceIdAndLicenseId(Long deviceId, Long licenseId);
+
 
 }

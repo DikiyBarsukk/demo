@@ -12,7 +12,7 @@ public interface LicenseService {
     License findById(Long id);
     Ticket processActivation(String macAddress, String licenseKey, User user);
     Ticket renewLicense(String licenseKey, String macAddress, User authenticatedUser);
-    ResponseEntity<?> getLicenseInfo(@RequestParam String mac);
+    ResponseEntity<?> getLicenseInfo(@RequestParam String mac, @RequestParam String licenseKey);
     long countActiveDevicesForLicense(License license);
     void deleteById(Long id);
     void changeLicenseStatus(Long licenseId, boolean isBlocked, User authenticatedUser);

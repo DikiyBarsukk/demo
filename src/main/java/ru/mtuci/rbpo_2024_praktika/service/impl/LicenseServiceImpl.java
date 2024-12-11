@@ -16,6 +16,7 @@ import ru.mtuci.rbpo_2024_praktika.ticket.Ticket;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Stream;
 
@@ -43,17 +44,17 @@ public class LicenseServiceImpl implements LicenseService {
     public License createLicense(Long productId, Long ownerId, Long licenseTypeId, Integer deviceCount) {
         Product product = productService.getProductById(productId);
         if (product == null) {
-            throw new IllegalArgumentException("Продукт не найден");
+            return null; // Продукт не найден
         }
 
         User user = userService.getById(ownerId);
         if (user == null) {
-            throw new NoSuchElementException("Пользователь не найден");
+            return null; // Пользователь не найден
         }
 
         LicenseType licenseType = licenseTypeService.getLicenseTypeById(licenseTypeId);
         if (licenseType == null) {
-            throw new NoSuchElementException("Тип лицензии не найден");
+            return null; // Тип лицензии не найден
         }
 
         License license = new License();
@@ -65,7 +66,10 @@ public class LicenseServiceImpl implements LicenseService {
         String activationCode = Stream.generate(() -> UUID.randomUUID().toString())
                 .filter(code -> !licenseRepository.existsByKey(code))
                 .findFirst()
-                .orElseThrow(() -> new IllegalStateException("Не удалось сгенерировать уникальный ключ активации"));
+                .orElse(null);
+        if (activationCode == null) {
+            return null; // Не удалось сгенерировать ключ
+        }
         license.setKey(activationCode);
         licenseRepository.save(license);
         licenseHistoryService.recordLicenseChange(license, user, "Создана", "Лицензия успешно создана");
@@ -74,12 +78,19 @@ public class LicenseServiceImpl implements LicenseService {
 
     @Override
     public Ticket processActivation(String macAddress, String licenseKey, User user) {
-        Device device = deviceRepository.findByMac(macAddress)
-                .orElseThrow(() -> new IllegalArgumentException("Устройство с указанным MAC-адресом не найдено."));
+        Device device = deviceRepository.findByMac(macAddress).orElse(null);
+        if (device == null) {
+            return null; // Устройство не найдено
+        }
 
         License license = validateAndRetrieveLicense(licenseKey, user);
+        if (license == null) {
+            return null; // Лицензия не найдена или принадлежит другому пользователю
+        }
 
-        verifyDeviceLinking(device, license);
+        if (!verifyDeviceLinking(device, license)) {
+            return null; // Не удалось привязать устройство (лимит устройств или уже привязано)
+        }
 
         linkDeviceToLicense(device, license);
         updateLicenseExpirationIfRequired(license);
@@ -89,31 +100,33 @@ public class LicenseServiceImpl implements LicenseService {
     }
 
     private License validateAndRetrieveLicense(String licenseKey, User user) {
-        License license = licenseRepository.findByKey(licenseKey)
-                .orElseThrow(() -> new IllegalArgumentException("Лицензия с указанным ключом не найдена."));
+        License license = licenseRepository.findByKey(licenseKey).orElse(null);
+        if (license == null) {
+            return null; // Лицензия не найдена
+        }
 
         if (license.getUser() == null) {
             license.setUser(user);
-        }
-
-        if (!license.getUser().getId().equals(user.getId())) {
-            throw new IllegalArgumentException("Лицензия зарегистрирована на другого пользователя.");
+        } else if (!license.getUser().getId().equals(user.getId())) {
+            return null; // Лицензия принадлежит другому пользователю
         }
 
         return license;
     }
 
-    private void verifyDeviceLinking(Device device, License license) {
+    private boolean verifyDeviceLinking(Device device, License license) {
         if (countActiveDevicesForLicense(license) >= license.getDeviceCount()) {
-            throw new IllegalArgumentException("Превышено допустимое количество устройств для данной лицензии.");
+            return false; // Превышен лимит устройств
         }
 
         boolean alreadyLinked = deviceLicenseService
                 .existsByLicenseIdAndDeviceId(license.getId(), device.getId());
 
         if (alreadyLinked) {
-            throw new IllegalArgumentException("Устройство уже связано с данной лицензией.");
+            return false; // Устройство уже связано
         }
+
+        return true;
     }
 
     private DeviceLicense linkDeviceToLicense(Device device, License license) {
@@ -130,10 +143,10 @@ public class LicenseServiceImpl implements LicenseService {
 
     private void updateLicenseExpirationIfRequired(License license) {
         if (license.getExpirationDate() == null) {
-            int duration = license.getLicenseType().getDefaultDuration();
-            LocalDate expiration = LocalDate.now().plusMonths(duration);
-            license.setExpirationDate(Date.from(expiration.atStartOfDay(ZoneId.systemDefault()).toInstant()));
-            licenseRepository.save(license);
+            int durationMonths = license.getLicenseType().getDefaultDuration();
+            Date newExpirationDate = Date.from(Instant.now().plus(durationMonths, ChronoUnit.MONTHS));
+            license.setExpirationDate(newExpirationDate);
+
         }
     }
 
@@ -152,29 +165,26 @@ public class LicenseServiceImpl implements LicenseService {
 
         License license = getByKey(licenseKey);
         if (license == null) {
-            throw new IllegalArgumentException("Лицензия не найдена по указанному ключу.");
+            return null; // Лицензия не найдена
         }
         User licenseOwner = license.getUser();
         if (!isAdmin && (licenseOwner == null || !licenseOwner.getEmail().equals(authenticatedUser.getEmail()))) {
-            throw new IllegalArgumentException("Вы не можете продлить чужую лицензию.");
+            return null; // Нельзя продлить чужую лицензию
         }
 
-        Device device = deviceRepository.findByMac(macAddress)
-                .orElseThrow(() -> new IllegalArgumentException("Устройство с таким MAC-адресом не найдено."));
+        Device device = deviceRepository.findByMac(macAddress).orElse(null);
+        if (device == null) {
+            return null; // Устройство не найдено
+        }
 
         boolean isLinked = deviceLicenseRepository.existsByLicenseIdAndDeviceId(license.getId(), device.getId());
         if (!isLinked) {
-            throw new IllegalArgumentException("Устройство не связано с данной лицензией.");
+            return null; // Устройство не связано с данной лицензией
         }
 
         Integer durationMonths = license.getLicenseType().getDefaultDuration();
-        LocalDate baseDate = (license.getExpirationDate() != null)
-                ? Instant.ofEpochMilli(license.getExpirationDate().getTime())
-                .atZone(ZoneId.systemDefault())
-                .toLocalDate()
-                : LocalDate.now();
-        LocalDate updatedDate = baseDate.plusMonths(durationMonths);
-        Date newExpirationDate = Date.from(updatedDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+        Date newExpirationDate = Date.from((license.getExpirationDate() != null ?
+                license.getExpirationDate().toInstant() : Instant.now()).plus(durationMonths, ChronoUnit.MONTHS));
         license.setExpirationDate(newExpirationDate);
         licenseRepository.save(license);
         licenseHistoryService.recordLicenseChange(
@@ -193,34 +203,43 @@ public class LicenseServiceImpl implements LicenseService {
     }
 
     @GetMapping("/info")
-    public ResponseEntity<?> getLicenseInfo(@RequestParam String mac) {
+    public ResponseEntity<?> getLicenseInfo(@RequestParam String mac, @RequestParam String licenseKey) {
         try {
+
             Device device = deviceService.getByMac(mac);
             if (device == null) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Устройство не найдено");
             }
 
-            List<DeviceLicense> deviceLicenses = deviceLicenseService.findByDeviceId(device.getId());
-
-            List<Ticket> tickets = new ArrayList<>();
-            deviceLicenses.stream()
-                    .map(DeviceLicense::getLicense)
-                    .filter(Objects::nonNull)
-                    .filter(license -> license.getExpirationDate() == null ||
-                            !license.getExpirationDate().before(new Date()))
-                    .map(license -> new Ticket(license, device))
-                    .forEach(tickets::add);
+            License license = licenseRepository.findByKey(licenseKey).orElse(null);
+            if (license == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Лицензия не найдена");
+            }
 
 
-            return ResponseEntity.ok(tickets);
+            DeviceLicense deviceLicense = deviceLicenseRepository.findByDeviceIdAndLicenseId(device.getId(), license.getId());
+            if (deviceLicense == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Связь между устройством и лицензией не найдена");
+            }
+
+
+            if (license.getExpirationDate() != null && license.getExpirationDate().before(new Date())) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Лицензия истекла");
+            }
+
+            Ticket ticket = new Ticket(license, device);
+
+            return ResponseEntity.ok(ticket);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Ошибка: " + e.getMessage());
         }
     }
 
     public void changeLicenseStatus(Long licenseId, boolean isBlocked, User authenticatedUser) {
-        License license = licenseRepository.findById(licenseId)
-                .orElseThrow(() -> new IllegalArgumentException("Лицензия с таким ID не найдена"));
+        License license = licenseRepository.findById(licenseId).orElse(null);
+        if (license == null) {
+            return;
+        }
 
         boolean previousStatus = license.getBlocked();
 
@@ -239,10 +258,12 @@ public class LicenseServiceImpl implements LicenseService {
             );
         }
     }
+
     @Override
     public boolean existsByProductId(Long productId) {
         return licenseRepository.existsByProductId(productId);
     }
+
     @Override
     public License findById(Long id) {
         return licenseRepository.findById(id).orElse(null);
