@@ -11,5 +11,6 @@ spring:
     show-sql: true
 
 jwt:
+  #Секреты не должны храниться в открытом виде!
   secret: BarsukovDmirtiyVladimirovichBKS2201000
   expiration: 5000000

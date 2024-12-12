@@ -11,6 +11,10 @@ import ru.mtuci.rbpo_2024_praktika.model.User;
 import ru.mtuci.rbpo_2024_praktika.service.DeviceService;
 import ru.mtuci.rbpo_2024_praktika.service.UserService;
 
+//TODO: 1. По заданию для всех сущностей должны поддерживаться все CRUD операции
+//TODO: 2. Администратор не должен добавлять устройства вручную
+//TODO: 3. По вашей логике все устройства принадлежат администратору
+
 @RequiredArgsConstructor
 @RequestMapping("/device")
 @RestController

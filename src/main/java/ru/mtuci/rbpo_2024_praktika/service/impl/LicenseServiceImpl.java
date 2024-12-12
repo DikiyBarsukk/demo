@@ -19,6 +19,11 @@ import java.time.ZoneId;
 import java.util.*;
 import java.util.stream.Stream;
 
+//TODO: 1. Плохой способ борьбы с коллизиями кодов активации
+//TODO: 2. По вашей логике, пользователь не может активировать лицензию с нового устройства
+//TODO: 3. Где лицензии проставляется дата первой активации?
+//TODO: 4. Возвращать список тикетов не нужно, вернуть только один тикет
+
 @RequiredArgsConstructor
 @Service
 public class LicenseServiceImpl implements LicenseService {

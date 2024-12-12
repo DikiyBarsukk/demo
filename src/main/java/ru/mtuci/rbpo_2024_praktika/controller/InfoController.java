@@ -14,6 +14,8 @@ import ru.mtuci.rbpo_2024_praktika.service.ProductService;
 import java.util.List;
 import java.util.Optional;
 
+//TODO: 1. Любой пользователь может получить полную информацию о любой лицензии?
+
 @RequiredArgsConstructor
 @RequestMapping("/info")
 @RestController
