@@ -16,9 +16,10 @@ import ru.mtuci.rbpo_2024_praktika.model.User;
 import ru.mtuci.rbpo_2024_praktika.service.LicenseService;
 import ru.mtuci.rbpo_2024_praktika.service.UserService;
 import ru.mtuci.rbpo_2024_praktika.ticket.Ticket;
+import ru.mtuci.rbpo_2024_praktika.util.AuthUtil;
 
 import java.util.NoSuchElementException;
-//TODO: 1. Между классами есть дублирование кода -
+//TODO: 1. Между классами есть дублирование кода - вынес метод в отдельный утилитный класс
 
 @RequiredArgsConstructor
 @RequestMapping("/licenses")
@@ -27,12 +28,13 @@ import java.util.NoSuchElementException;
 public class LicenseController {
     private final LicenseService licenseService;
     private final UserService userService;
+    private final AuthUtil authUtil;
 
     @PostMapping("/activate")
     public ResponseEntity<?> activateLicense(
             @RequestBody ActivationDTO activationDTO) {
         try {
-            User currentUser = getAuthenticatedUser();
+            User currentUser = authUtil.getAuthenticatedUser();
             Ticket ticket = licenseService.processActivation(activationDTO.getMac(), activationDTO.getKey(), currentUser);
             return ResponseEntity.ok(ticket);
         } catch (IllegalArgumentException e) {
@@ -63,7 +65,7 @@ public class LicenseController {
     public ResponseEntity<?> renewLicense(
             @RequestBody RenewDTO renewDTO) {
         try {
-            User authenticatedUser = getAuthenticatedUser();
+            User authenticatedUser = authUtil.getAuthenticatedUser();
             Ticket ticket = licenseService.renewLicense(renewDTO.getLicenseKey(), renewDTO.getMacAddress(), authenticatedUser);
             return ResponseEntity.ok(ticket);
         } catch (IllegalArgumentException e) {
@@ -96,7 +98,7 @@ public class LicenseController {
             @PathVariable Long licenseId,
             @RequestParam boolean isBlocked) {
         try {
-            User authenticatedUser = getAuthenticatedUser();
+            User authenticatedUser = authUtil.getAuthenticatedUser();
             licenseService.changeLicenseStatus(licenseId, isBlocked, authenticatedUser);
             return ResponseEntity.ok("Статус лицензии успешно обновлен.");
         } catch (IllegalArgumentException e) {
@@ -108,14 +110,6 @@ public class LicenseController {
         }
     }
 
-    private User getAuthenticatedUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null) {
-            String username = (String) authentication.getPrincipal();
-            return userService.findByEmail(username).orElseThrow(() -> new IllegalArgumentException("Пользователь не найден"));
-        }
-        return null;
-    }
 }
 
 

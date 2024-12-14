@@ -9,6 +9,8 @@ import ru.mtuci.rbpo_2024_praktika.controller.dto.AddDeviceDTO;
 import ru.mtuci.rbpo_2024_praktika.model.User;
 import ru.mtuci.rbpo_2024_praktika.service.DeviceService;
 import ru.mtuci.rbpo_2024_praktika.service.UserService;
+import ru.mtuci.rbpo_2024_praktika.util.AuthUtil;
+
 //TODO: 1. По заданию для всех сущностей должны поддерживаться все CRUD операции -
 //+TODO: 2. Администратор не должен добавлять устройства вручную - теперь пользователь вручную добавляет свое устройство
 //+TODO: 3. По вашей логике все устройства принадлежат администратору - Теперь любой пользователь создает устройства
@@ -19,12 +21,13 @@ public class DeviceController {
 
     private final DeviceService deviceService;
     private final UserService userService;
+    private final AuthUtil authUtil;
 
 
     @PostMapping("/add")
     public ResponseEntity<String> addDevice(@RequestBody AddDeviceDTO addDeviceDTO) {
         try {
-            User user = getAuthenticatedUser();
+            User user = authUtil.getAuthenticatedUser();
             deviceService.addDevice(addDeviceDTO.getName(), user);
             return ResponseEntity.ok("Устройство добавлено");
         } catch (IllegalArgumentException e) {
@@ -32,12 +35,4 @@ public class DeviceController {
         }
     }
 
-    private User getAuthenticatedUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null) {
-            String username = (String) authentication.getPrincipal();
-            return userService.findByEmail(username).orElseThrow(() -> new IllegalArgumentException("Пользователь не найден"));
-        }
-        return null;
-    }
 }

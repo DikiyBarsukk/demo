@@ -11,8 +11,25 @@ import ru.mtuci.rbpo_2024_praktika.service.DeviceService;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.util.Collections;
+import java.util.Random;
 
-//TODO: 1. Я вижу уже раз третий этот непонятный способ получения мак адреса. Чей вы mac-адрес берёте? -
+//+TODO: 1. Я вижу уже раз третий этот непонятный способ получения мак адреса. Чей вы mac-адрес берёте?
+// MAC не берётся с сервера, а генерируется локально. Можно использовать этот подход,
+// если не нужно фиксировать реальный MAC-адрес.
+
+/*
+    // Пример генерации случайного MAC-адреса
+    private static String generateRandomMac() {
+        byte[] mac = new byte[6];
+        new Random().nextBytes(mac);
+
+        // Устанавливаем локально-администрируемый бит (0x02) и сбрасываем мультикаст-бит (0x01).
+        mac[0] = (byte)(mac[0] & 0xFE); // Сбрасываем младший бит (мультикаст)
+        mac[0] = (byte)(mac[0] | 0x02); // Устанавливаем локально-администрируемый бит
+
+        return formatMacAddress(mac);
+    }
+*/
 
 @RequiredArgsConstructor
 @Service
@@ -22,6 +39,7 @@ public class DeviceServiceImpl implements DeviceService {
 
     @Override
     public Device addDevice(String name, User user) {
+        // можно заменить getMacAddress() на generateRandomMac()
         String mac = getMacAddress();
 
         if (mac.isEmpty()) {
@@ -55,7 +73,6 @@ public class DeviceServiceImpl implements DeviceService {
                 }
             }
         } catch (SocketException e) {
-
         }
         return "";
     }
