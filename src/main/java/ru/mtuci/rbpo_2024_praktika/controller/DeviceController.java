@@ -39,7 +39,6 @@ public class DeviceController {
         if (currentUser == null) {
             return ResponseEntity.badRequest().build();
         }
-        // Предположим, что deviceService.findAllByUserId(...) вернёт все устройства пользователя.
         List<Device> devices = deviceService.findAllByUserId(currentUser.getId());
         return ResponseEntity.ok(devices);
     }
@@ -57,7 +56,6 @@ public class DeviceController {
 
         Device device = deviceOpt.get();
 
-        // Проверяем владельца (или роль admin), если требуется логика разграничения
         boolean isOwner = device.getUser().getId().equals(currentUser.getId());
         boolean isAdmin =  currentUser.getRole() == ApplicationRole.ADMIN;
         if (!isOwner && !isAdmin) {

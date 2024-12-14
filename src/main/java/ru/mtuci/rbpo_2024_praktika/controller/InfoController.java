@@ -46,13 +46,13 @@ public class InfoController {
             @RequestParam Long userId  // добавил параметр владельца
     ) {
         try {
-            // 1. Получаем текущего пользователя из SecurityContext
+
             User currentUser = authUtil.getAuthenticatedUser();
             if (currentUser == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Пользователь не авторизован");
             }
 
-            // 2. Вызываем сервисный метод, чтобы получить Ticket (или null/ошибку)
+
             ResponseEntity<?> response = licenseService.getLicenseInfo(mac, key);
             if (response.getStatusCode() != HttpStatus.OK) {
                 return response;
@@ -69,23 +69,23 @@ public class InfoController {
                         .body("Ошибка: некорректная лицензия");
             }
 
-            // 3. Проверяем, владелец ли это или администратор
+
             boolean isOwner = (license.getUser() != null && license.getUser().getId().equals(userId));
             boolean isCurrentUserOwner = (license.getUser() != null && license.getUser().getId().equals(currentUser.getId()));
             boolean isAdmin =  currentUser.getRole() == ApplicationRole.ADMIN;
 
-            // Если текущий пользователь не владелец лицензии и не админ, вернуть 403
+
             if (!isAdmin && !isCurrentUserOwner) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body("У вас нет прав на просмотр чужой лицензии.");
             }
 
-            // Если userId не совпадает с реальным владельцем лицензии и мы не админ, ошибка
+
             if (!isAdmin && !isOwner) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body("Параметр userId не совпадает с владельцем лицензии");
             }
 
-            // 4. Всё ок — возвращаем Ticket
+
             return ResponseEntity.ok(ticket);
 
         } catch (Exception e) {
