@@ -10,6 +10,8 @@ import ru.mtuci.rbpo_2024_praktika.model.TicketUtility;
 
 import java.util.Date;
 
+//TODO: 1. Интересная реализация, хочется с вами обсудить подробнее
+
 @NoArgsConstructor
 @Data
 public class Ticket {

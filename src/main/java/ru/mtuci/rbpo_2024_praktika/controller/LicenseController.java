@@ -18,7 +18,7 @@ import ru.mtuci.rbpo_2024_praktika.service.UserService;
 import ru.mtuci.rbpo_2024_praktika.ticket.Ticket;
 
 import java.util.NoSuchElementException;
-
+//TODO: 1. Между классами есть дублирование кода -
 
 @RequiredArgsConstructor
 @RequestMapping("/licenses")

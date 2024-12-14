@@ -2,7 +2,6 @@ package ru.mtuci.rbpo_2024_praktika.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -10,7 +9,9 @@ import ru.mtuci.rbpo_2024_praktika.controller.dto.AddDeviceDTO;
 import ru.mtuci.rbpo_2024_praktika.model.User;
 import ru.mtuci.rbpo_2024_praktika.service.DeviceService;
 import ru.mtuci.rbpo_2024_praktika.service.UserService;
-
+//TODO: 1. По заданию для всех сущностей должны поддерживаться все CRUD операции -
+//+TODO: 2. Администратор не должен добавлять устройства вручную - теперь пользователь вручную добавляет свое устройство
+//+TODO: 3. По вашей логике все устройства принадлежат администратору - Теперь любой пользователь создает устройства
 @RequiredArgsConstructor
 @RequestMapping("/device")
 @RestController
@@ -19,7 +20,7 @@ public class DeviceController {
     private final DeviceService deviceService;
     private final UserService userService;
 
-    @PreAuthorize("hasRole('ADMIN')")
+
     @PostMapping("/add")
     public ResponseEntity<String> addDevice(@RequestBody AddDeviceDTO addDeviceDTO) {
         try {

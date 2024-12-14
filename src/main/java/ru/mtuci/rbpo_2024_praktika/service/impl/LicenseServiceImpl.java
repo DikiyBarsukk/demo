@@ -20,6 +20,11 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Stream;
 
+//TODO: 1. Плохой способ борьбы с коллизиями кодов активации - ?Сделал по другому, теперь будет 100 попыток создать УНИКАЛЬНЫЙ код
+//TODO: 2. По вашей логике, пользователь не может активировать лицензию с нового устройства - может, если перед активацией юзер зарегестрирует свое устройство, и потом на активацию отправит его мак адрес
+//TODO: 3. Где лицензии проставляется дата первой активации? - Потерял - добавил в validateAndRetrieveLicense
+//TODO: 4. Возвращать список тикетов не нужно, вернуть только один тикет - ?
+
 @RequiredArgsConstructor
 @Service
 public class LicenseServiceImpl implements LicenseService {
@@ -63,13 +68,15 @@ public class LicenseServiceImpl implements LicenseService {
         license.setLicenseType(licenseType);
         license.setDeviceCount(deviceCount);
 
-        String activationCode = Stream.generate(() -> UUID.randomUUID().toString())
-                .filter(code -> !licenseRepository.existsByKey(code))
-                .findFirst()
-                .orElse(null);
-        if (activationCode == null) {
-            return null; // Не удалось сгенерировать ключ
+        String activationCode = null;
+        for (int i = 0; i < 100; i++) {
+            String candidateCode = UUID.randomUUID().toString();
+            if (!licenseRepository.existsByKey(candidateCode)) {
+                activationCode = candidateCode;
+                break;
+            }
         }
+
         license.setKey(activationCode);
         licenseRepository.save(license);
         licenseHistoryService.recordLicenseChange(license, user, "Создана", "Лицензия успешно создана");
@@ -92,6 +99,7 @@ public class LicenseServiceImpl implements LicenseService {
             return null; // Не удалось привязать устройство (лимит устройств или уже привязано)
         }
 
+
         linkDeviceToLicense(device, license);
         updateLicenseExpirationIfRequired(license);
 
@@ -111,6 +119,10 @@ public class LicenseServiceImpl implements LicenseService {
             return null; // Лицензия принадлежит другому пользователю
         }
 
+        if (license.getActivationDate()==null){
+            license.setActivationDate(new Date());
+        }
+
         return license;
     }
 
@@ -122,11 +134,7 @@ public class LicenseServiceImpl implements LicenseService {
         boolean alreadyLinked = deviceLicenseService
                 .existsByLicenseIdAndDeviceId(license.getId(), device.getId());
 
-        if (alreadyLinked) {
-            return false; // Устройство уже связано
-        }
-
-        return true;
+        return !alreadyLinked; // Устройство уже связано
     }
 
     private DeviceLicense linkDeviceToLicense(Device device, License license) {
@@ -146,7 +154,6 @@ public class LicenseServiceImpl implements LicenseService {
             int durationMonths = license.getLicenseType().getDefaultDuration();
             Date newExpirationDate = Date.from(Instant.now().plus(durationMonths, ChronoUnit.MONTHS));
             license.setExpirationDate(newExpirationDate);
-
         }
     }
 
@@ -201,6 +208,7 @@ public class LicenseServiceImpl implements LicenseService {
     public long countActiveDevicesForLicense(License license) {
         return deviceLicenseRepository.countByLicenseAndActivationDateIsNotNull(license);
     }
+
 
     @GetMapping("/info")
     public ResponseEntity<?> getLicenseInfo(@RequestParam String mac, @RequestParam String licenseKey) {

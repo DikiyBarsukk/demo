@@ -12,6 +12,7 @@ import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.util.Collections;
 
+//TODO: 1. Я вижу уже раз третий этот непонятный способ получения мак адреса. Чей вы mac-адрес берёте? -
 
 @RequiredArgsConstructor
 @Service
@@ -23,7 +24,7 @@ public class DeviceServiceImpl implements DeviceService {
     public Device addDevice(String name, User user) {
         String mac = getMacAddress();
 
-        if (mac == null || mac.isEmpty()) {
+        if (mac.isEmpty()) {
             throw new IllegalStateException("Не удалось получить MAC-адрес");
         }
 

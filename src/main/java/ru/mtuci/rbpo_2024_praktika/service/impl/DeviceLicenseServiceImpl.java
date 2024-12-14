@@ -23,6 +23,4 @@ public class DeviceLicenseServiceImpl implements DeviceLicenseService {
     public boolean existsByLicenseIdAndDeviceId(Long licenseId, Long deviceId){
         return deviceLicenseRepository.existsByLicenseIdAndDeviceId(licenseId, deviceId);
     }
-
-
 }
