@@ -11,6 +11,8 @@ import ru.mtuci.rbpo_2024_praktika.service.DeviceService;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 import java.util.Random;
 
 //+TODO: 1. Я вижу уже раз третий этот непонятный способ получения мак адреса. Чей вы mac-адрес берёте?
@@ -95,5 +97,23 @@ public class DeviceServiceImpl implements DeviceService {
     public Device getByMac(String mac) {
         return deviceRepository.findByMac(mac)
                 .orElseThrow(() -> new EntityNotFoundException("Устройство с MAC-адресом " + mac + " не найдено"));
+    }
+    @Override
+    public Optional<Device> findById(Long id) {
+        return deviceRepository.findById(id);
+    }
+    @Override
+    public List<Device> findAllByUserId(Long userId) {
+        // Если такого метода нет, нужно добавить в репозиторий:
+        // List<Device> findAllByUserId(Long userId);
+        return deviceRepository.findAllByUserId(userId);
+    }
+    @Override
+    public Device save(Device device) {
+        return deviceRepository.save(device);
+    }
+    @Override
+    public void deleteById(Long id) {
+        deviceRepository.deleteById(id);
     }
 }
