@@ -110,13 +110,13 @@ public class LicenseServiceImpl implements LicenseService {
     private License validateAndRetrieveLicense(String licenseKey, User user) {
         License license = licenseRepository.findByKey(licenseKey).orElse(null);
         if (license == null) {
-            return null; // Лицензия не найдена
+            throw new IllegalArgumentException("Лицензия не найдена");
         }
 
         if (license.getUser() == null) {
             license.setUser(user);
         } else if (!license.getUser().getId().equals(user.getId())) {
-            return null; // Лицензия принадлежит другому пользователю
+            throw new IllegalArgumentException("Лицензия принадлежит другому пользователю");
         }
 
         if (license.getActivationDate()==null){
@@ -125,6 +125,7 @@ public class LicenseServiceImpl implements LicenseService {
 
         return license;
     }
+
 
     private boolean verifyDeviceLinking(Device device, License license) {
         if (countActiveDevicesForLicense(license) >= license.getDeviceCount()) {
@@ -152,10 +153,15 @@ public class LicenseServiceImpl implements LicenseService {
     private void updateLicenseExpirationIfRequired(License license) {
         if (license.getExpirationDate() == null) {
             int durationMonths = license.getLicenseType().getDefaultDuration();
-            Date newExpirationDate = Date.from(Instant.now().plus(durationMonths, ChronoUnit.MONTHS));
-            license.setExpirationDate(newExpirationDate);
+
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime(new Date());                // Текущая дата/время
+            calendar.add(Calendar.MONTH, durationMonths); // Прибавляем месяцы
+
+            license.setExpirationDate(calendar.getTime());
         }
     }
+
 
     @Override
     public void deleteById(Long id) {
@@ -172,31 +178,40 @@ public class LicenseServiceImpl implements LicenseService {
 
         License license = getByKey(licenseKey);
         if (license == null) {
-            return null; // Лицензия не найдена
+            throw new IllegalArgumentException("Лицензия не найдена");
         }
         User licenseOwner = license.getUser();
         if (!isAdmin && (licenseOwner == null || !licenseOwner.getEmail().equals(authenticatedUser.getEmail()))) {
-            return null; // Нельзя продлить чужую лицензию
+            throw new IllegalArgumentException("Нельзя продлить чужую лицензию");
         }
 
         Device device = deviceRepository.findByMac(macAddress).orElse(null);
         if (device == null) {
-            return null; // Устройство не найдено
+            throw new IllegalArgumentException("Устройство не найдено");
         }
 
         boolean isLinked = deviceLicenseRepository.existsByLicenseIdAndDeviceId(license.getId(), device.getId());
         if (!isLinked) {
-            return null; // Устройство не связано с данной лицензией
+            throw new IllegalArgumentException("Устройство не связано с данной лицензией");
         }
 
         Integer durationMonths = license.getLicenseType().getDefaultDuration();
-        Date newExpirationDate = Date.from((license.getExpirationDate() != null ?
-                license.getExpirationDate().toInstant() : Instant.now()).plus(durationMonths, ChronoUnit.MONTHS));
+        Date baseDate = (license.getExpirationDate() != null) ? license.getExpirationDate() : new Date();
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(baseDate);
+        calendar.add(Calendar.MONTH, durationMonths);
+
+        Date newExpirationDate = calendar.getTime();
         license.setExpirationDate(newExpirationDate);
         licenseRepository.save(license);
         licenseHistoryService.recordLicenseChange(
-                license, licenseOwner != null ? licenseOwner : authenticatedUser, "Продление", "Новая дата: " + newExpirationDate
+                license,
+                licenseOwner != null ? licenseOwner : authenticatedUser,
+                "Продление",
+                "Новая дата: " + newExpirationDate
         );
+
         return new Ticket(license, device);
     }
 
