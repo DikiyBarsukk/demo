@@ -43,7 +43,7 @@ public class InfoController {
     public ResponseEntity<?> getLicenseInfo(
             @RequestParam String mac,
             @RequestParam String key,
-            @RequestParam Long userId  // добавил параметр владельца
+            @RequestParam Long userId
     ) {
         try {
 

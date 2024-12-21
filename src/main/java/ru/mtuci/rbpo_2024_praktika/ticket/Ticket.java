@@ -32,7 +32,8 @@ public class Ticket {
     @Builder
     public Ticket(License license, Device device) {
         this.serverDate = new Date();
-        this.ticketLifetime = license.getLicenseType().getDefaultDuration().longValue() * 30 * 24 * 60 * 60;
+        this.serverDate.setTime(this.serverDate.getTime() + 3 * 60 * 60 * 1000);
+        this.ticketLifetime = 604800L;
         this.activationDate = license.getActivationDate();
         this.expirationDate = license.getExpirationDate();
         this.userId = device.getUser() != null ? device.getUser().getId() : null;
