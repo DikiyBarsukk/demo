@@ -15,11 +15,6 @@ import ru.mtuci.rbpo_2024_praktika.util.AuthUtil;
 import java.util.List;
 import java.util.Optional;
 
-
-//TODO: 1. По заданию для всех сущностей должны поддерживаться все CRUD операции
-//TODO: 2. Администратор не должен добавлять устройства вручную
-//TODO: 3. По вашей логике все устройства принадлежат администратору
-
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/device")

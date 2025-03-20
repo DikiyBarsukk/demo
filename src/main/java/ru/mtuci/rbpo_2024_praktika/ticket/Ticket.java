@@ -9,9 +9,6 @@ import ru.mtuci.rbpo_2024_praktika.model.License;
 import ru.mtuci.rbpo_2024_praktika.model.TicketUtility;
 
 import java.util.Date;
-
-//TODO: 1. Интересная реализация, хочется с вами обсудить подробнее
-
 @NoArgsConstructor
 @Data
 public class Ticket {
@@ -33,7 +30,7 @@ public class Ticket {
     public Ticket(License license, Device device) {
         this.serverDate = new Date();
         this.serverDate.setTime(this.serverDate.getTime() + 3 * 60 * 60 * 1000);
-        this.ticketLifetime = 604800L;
+        this.ticketLifetime = 86400L;
         this.activationDate = license.getActivationDate();
         this.expirationDate = license.getExpirationDate();
         this.userId = device.getUser() != null ? device.getUser().getId() : null;

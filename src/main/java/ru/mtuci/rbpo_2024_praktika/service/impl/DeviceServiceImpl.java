@@ -104,8 +104,6 @@ public class DeviceServiceImpl implements DeviceService {
     }
     @Override
     public List<Device> findAllByUserId(Long userId) {
-        // Если такого метода нет, нужно добавить в репозиторий:
-        // List<Device> findAllByUserId(Long userId);
         return deviceRepository.findAllByUserId(userId);
     }
     @Override
